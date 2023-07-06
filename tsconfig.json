@@ -1,0 +1,35 @@
+{
+  "include": [
+    "src/*.js",
+    "src/**/*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "types",
+    "build"
+  ],
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "target": "es2022",
+    "module": "es2022",
+    "lib": ["es2022", "dom"],
+    "types": ["@socketsupply/socket"],
+    "paths": {
+      "socket:ditto": ["src/socket/ditto.js"],
+      "socket:ditto/*": ["src/socket/ditto/*"]
+    },
+
+    "removeComments": false,
+
+    "checkJs": true,
+    "allowJs": true,
+
+    "alwaysStrict": true,
+    "strictNullChecks": false,
+
+    "declaration": true,
+    "declarationMap": true,
+
+    "baseUrl": "."
+  }
+}
