@@ -2,41 +2,64 @@
 #include <mutex>
 
 namespace Socket::Ruby::State {
-  static mrb_state *state = nullptr;
+  static mrb_state *root = nullptr;
+  static std::vector<mrb_state*> states;
   static Mutex mutex;
 
   mrb_state* Open () {
     Lock lock(mutex);
 
-    if (state == nullptr) {
-      state = mrb_open();
-      if (state != nullptr) {
-        Kernel::Init(state);
+    if (root == nullptr) {
+      root = mrb_open();
+      if (root != nullptr) {
+        Kernel::Init(root);
+        Bindings::Init(root);
       }
     }
 
-    return state;
+    return root;
   }
 
   void Close () {
     Lock lock(mutex);
 
-    if (state != nullptr) {
-      mrb_close(state);
-      state = nullptr;
+    if (root != nullptr) {
+      mrb_close(root);
+      root = nullptr;
     }
+
+    for (auto state : states) {
+      mrb_close(state);
+    }
+
+    states.clear();
   }
 
-  mrb_state* Get () {
+  void Close (mrb_state *state) {
     Lock lock(mutex);
-    return state;
+    for (int i = 0; i < states.size(); ++i) {
+      auto entry = states.at(i);
+      if (entry == state) {
+        states.erase(states.begin() + i);
+        break;
+      }
+    }
+
+    mrb_close(state);
+  }
+
+  mrb_state* GetRoot () {
+    Lock lock(mutex);
+    return root;
   }
 
   mrb_state* Clone (mrb_value self) {
-    return Clone(state, self);
+    return Clone(root, self);
   }
 
   mrb_state* Clone (mrb_state* source_state, mrb_value self) {
+    Lock lock(mutex);
+
     mrb_state* destination_state = mrb_open();
     mrb_value globals = mrb_f_global_variables(source_state, self);
 
@@ -106,6 +129,8 @@ namespace Socket::Ruby::State {
       mrb_gc_arena_restore(source_state, arena);
     }
 
+    Kernel::Init(destination_state);
+    Bindings::Init(destination_state);
     return destination_state;
   }
 }

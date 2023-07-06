@@ -7,4 +7,4 @@ globalThis.ruby = ruby
 
 console.log(await ruby.binding.open({ filename: 'main.rb' }))
 
-console.log(await ipc.request('foo.bar'))
+console.log(await ipc.request('ruby.hello.world'))

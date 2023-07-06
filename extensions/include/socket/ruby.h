@@ -120,18 +120,13 @@ namespace Socket::Ruby {
   namespace State {
     void Close ();
     mrb_state* Open ();
-    mrb_state* Get ();
+    mrb_state* GetRoot ();
     mrb_state* Clone (mrb_value self);
     mrb_state* Clone (mrb_state* source_state, mrb_value self);
   }
 
   namespace Bindings {
-    mrb_value sapi_ipc_router_map (mrb_state *state, mrb_value self);
-    mrb_value sapi_ipc_router_unmap (mrb_state *state, mrb_value self);
-    mrb_value sapi_ipc_result_create (mrb_state *state, mrb_value self);
-    mrb_value sapi_ipc_reply (mrb_state *state, mrb_value self);
-    mrb_value sapi_ipc_send_json (mrb_state *state, mrb_value self);
-    mrb_value sapi_ipc_send_bytes (mrb_state *state, mrb_value self);
+    void Init (mrb_state *state);
   }
 
   namespace Kernel {

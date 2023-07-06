@@ -11,6 +11,9 @@ MRuby::Build.new do |conf|
   conf.gembox 'full-core'
   conf.disable_presym
 
+  conf.gem :github => 'mattn/mruby-json'
+  #conf.gem :mgem => 'mruby-time'
+
   # conf.file_separator = '/'
   # conf.enable_debug
   conf.enable_bintest

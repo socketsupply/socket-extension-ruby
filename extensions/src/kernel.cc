@@ -1,6 +1,8 @@
 #include <socket/ruby.h>
 
 namespace Socket::Ruby::Kernel {
+  static Mutex mutex;
+
   static mrb_value puts (
     mrb_state *state,
     mrb_value self
@@ -32,11 +34,13 @@ namespace Socket::Ruby::Kernel {
   }
 
   void Init (mrb_state* state) {
+    Lock lock(mutex);
+
     mrb_define_method(
       state,
       state->kernel_module,
       "puts",
-      puts,
+      Socket::Ruby::Kernel::puts,
       MRB_ARGS_REQ(1)
     );
   }

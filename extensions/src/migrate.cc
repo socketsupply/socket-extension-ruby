@@ -63,7 +63,12 @@ namespace Socket::Ruby::Migrate {
 
   mrb_bool IsSafeMigratableDataType (const mrb_data_type *type) {
     static const char **types = Socket::Ruby::Types::GetNames();
-    static const char *internals[] = { "IO", "Time", nullptr };
+    static const char *internals[] = {
+      "IO",
+      "Time",
+      "JSON",
+      nullptr
+    };
 
     for (int i = 0; internals[i]; ++i) {
       if (strcmp(type->struct_name, internals[i]) == 0) {
@@ -456,6 +461,8 @@ namespace Socket::Ruby::Migrate {
           destination_state,
           destination_value
         );
+
+        DATA_PTR(destination_value) = DATA_PTR(source_value);
 
         if (mrb_type(source_value) == MRB_TT_EXCEPTION) {
           mrb_iv_set(
