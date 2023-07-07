@@ -5,6 +5,9 @@ MRUBY_CONFIG="$PWD/build_config.rb"
 
 pushd .
 
+git submodule init
+git submodule update
+
 if [[ "$target" =~ "ios" ]]; then
   CC="$(xcrun -sdk iphoneos -f clang)"
   LD="$(xcrun -sdk iphoneos -f clang)"
