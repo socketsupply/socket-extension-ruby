@@ -56,6 +56,7 @@ extern "C" {
 };
 
 #include <mutex>
+#include <vector>
 
 #ifdef mrb_range_ptr
 #define MRB_RANGE_PTR(state, value) mrb_range_ptr(value)
@@ -93,6 +94,8 @@ namespace Socket::Ruby {
   using Mutex = std::recursive_mutex;
   using Lock = std::lock_guard<Mutex>;
 
+  extern Mutex mutex;
+
   namespace Types {
     extern struct mrb_data_type Context;
     namespace IPC {
@@ -119,10 +122,15 @@ namespace Socket::Ruby {
 
   namespace State {
     void Close ();
+    void Close (mrb_state* state);
     mrb_state* Open ();
     mrb_state* GetRoot ();
+    mrb_state* Clone ();
     mrb_state* Clone (mrb_value self);
     mrb_state* Clone (mrb_state* source_state, mrb_value self);
+    void Migrate (mrb_state* source_state);
+    void Migrate (mrb_state* source_state, mrb_value self);
+    void Migrate (mrb_state* source_state, mrb_state* destination_state, mrb_value self);
   }
 
   namespace Bindings {
@@ -136,14 +144,6 @@ namespace Socket::Ruby {
   namespace IPC {
     void Start (sapi_context_t* context);
     void Stop (sapi_context_t* context);
-
-    namespace Routes {
-      void Open (
-        sapi_context_t* context,
-        sapi_ipc_message_t* message,
-        const sapi_ipc_router_t* router
-      );
-    }
   }
 
   namespace Migrate {

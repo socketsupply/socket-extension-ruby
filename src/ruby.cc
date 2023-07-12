@@ -1,5 +1,9 @@
 #include <socket/ruby.h>
 
+namespace Socket::Ruby {
+  Mutex mutex;
+}
+
 static bool Start (sapi_context_t* context, const void *data) {
   auto state = Socket::Ruby::State::Open();
   Socket::Ruby::IPC::Start(context);

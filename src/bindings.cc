@@ -30,7 +30,7 @@ namespace Socket::Ruby::Bindings {
     mrb_value block;
     char *route = nullptr;
 
-    mrb_get_args(state, "z|&*", &route, &block);
+    mrb_get_args(state, "z|&", &route, &block);
 
     if (mrb_block_given_p(state)) {
       if (mrb_obj_respond_to(state, mrb_class(state, block), mrb_intern_lit(state, "call"))) {

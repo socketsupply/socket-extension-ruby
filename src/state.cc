@@ -53,17 +53,24 @@ namespace Socket::Ruby::State {
     return root;
   }
 
-  mrb_state* Clone (mrb_value self) {
-    return Clone(root, self);
+  void Migrate (mrb_state* source_state) {
+    Migrate(source_state, mrb_obj_value(source_state->top_self));
   }
 
-  mrb_state* Clone (mrb_state* source_state, mrb_value self) {
+  void Migrate (mrb_state* source_state, mrb_value self) {
+    Migrate(source_state, GetRoot(), self);
+  }
+
+  void Migrate (mrb_state* source_state, mrb_state* destination_state, mrb_value self) {
     Lock lock(mutex);
 
-    mrb_state* destination_state = mrb_open();
-    mrb_value globals = mrb_f_global_variables(source_state, self);
-
     Migrate::MigrateSymbols(source_state, destination_state);
+
+    if (mrb_nil_p(self)) {
+      return;
+    }
+
+    mrb_value globals = mrb_f_global_variables(source_state, self);
 
     for (int i = 0; i < RARRAY_LEN(globals); i++) {
       int arena = mrb_gc_arena_save(source_state);
@@ -128,6 +135,22 @@ namespace Socket::Ruby::State {
 
       mrb_gc_arena_restore(source_state, arena);
     }
+  }
+
+  mrb_state* Clone () {
+    return Clone(mrb_nil_value());
+  }
+
+  mrb_state* Clone (mrb_value self) {
+    return Clone(root, self);
+  }
+
+  mrb_state* Clone (mrb_state* source_state, mrb_value self) {
+    Lock lock(mutex);
+
+    auto destination_state = mrb_open();
+
+    Migrate(source_state, destination_state, self);
 
     Kernel::Init(destination_state);
     Bindings::Init(destination_state);

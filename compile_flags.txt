@@ -1,4 +1,5 @@
 -Inode_modules/@socketsupply/socket-darwin-arm64/include
+-Inode_modules/@socketsupply/socket-darwin-arm64
 -Inode_modules/@socketsupply/socket-darwin-x64/include
 -Inode_modules/@socketsupply/socket/node_modules/@socketsupply/socket-darwin-arm64/include
 -Inode_modules/@socketsupply/socket/node_modules/@socketsupply/socket-darwin-x64/include

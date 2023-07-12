@@ -1,27 +1,19 @@
 #!/usr/bin/env bash
 
-target="$1"
+SSC_PLATFORM_TARGET="$(echo "$1" | sed 's/--platform=//g')"
 MRUBY_CONFIG="$PWD/build_config.rb"
-
-pushd .
 
 git submodule init
 git submodule update --depth 1
 
-if [[ "$target" =~ "ios" ]]; then
-  CC="$(xcrun -sdk iphoneos -f clang)"
-  LD="$(xcrun -sdk iphoneos -f clang)"
-  CFLAGS="-isysroot $(xcrun -sdk iphoneos -show-sdk-path) -target arm64-apple-ios -arch arm64 -D_XOPEN_SOURCE"
-  LDFLAGS="$CFLAGS"
-fi
+eval "$(ssc env)"
 
-export CC
-export LD
-export CFLAGS
-export LDFLAGS
+export SSC_PLATFORM_TARGET
+export ANDROID_HOME
+export JAVA_HOME
 
+pushd .
 cd mruby
-#rake clean
 rake MRUBY_CONFIG="$MRUBY_CONFIG"
-
 popd
+

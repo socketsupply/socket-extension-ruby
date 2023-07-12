@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ssc build -r -o test",
+    "clean": "cd mruby && rake clean",
+    "deep-clean": "rm -f build_config.rb.lock && cd mruby && rake deep_clean"
   },
   "author": "",
   "license": "ISC"
