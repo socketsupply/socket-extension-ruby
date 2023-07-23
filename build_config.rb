@@ -13,6 +13,9 @@ SOCKET_HOME = /SOCKET_HOME=(.*)/.match(%x[ssc env])[1].strip.gsub(/\/$/, '')
 SOCKET_HOME_INCLUDE = "#{SOCKET_HOME}/include"
 SOCKET_RUBY_GEMBOX = 'full-core'
 
+CFLAGS = ENV['CFLAGS']
+LDFLAGS = ENV['LDFLAGS']
+
 def configure (conf, arch = ARCH, platform = 'desktop')
   conf.bins = []
   conf.disable_presym
@@ -22,8 +25,19 @@ def configure (conf, arch = ARCH, platform = 'desktop')
 
   cflags << "-I#{SOCKET_HOME_INCLUDE}"
   cflags << "-I#{SOCKET_HOME}"
+  ldflags << "-undefined dynamic_lookup"
   ldflags << "-L#{SOCKET_HOME}/lib/#{arch}-#{platform}"
   ldflags << "-lsocket-runtime"
+
+  if not CFLAGS.nil? and not CFLAGS.empty?
+    cflags << CFLAGS
+  end
+
+  if not LDFLAGS.nil? and not LDFLAGS.empty?
+    ldflags << LDFLAGS
+  end
+
+  puts cflags
 
   case platform
   when 'desktop'
@@ -60,16 +74,17 @@ def configure (conf, arch = ARCH, platform = 'desktop')
     conf.cxx.flags << %w|-fPIC| # needed for using bundled gems
   end
 
-  ## enable full core library
+  # enable full core library
   conf.gembox 'full-core'
 
-  ## user space
-  conf.gem :github => 'mattn/mruby-json'
-  conf.gem 'gem'
+  # socket runtime
+  conf.gem 'mrbgems/socket-runtime'
 
-  ## must be last
+  # user space
+  conf.gem :github => 'mattn/mruby-json'
+
+  # MUST be last
   conf.gem :github => 'mattn/mruby-require'
-  conf.gem :github => 'mattn/mruby-thread'
 end
 
 if SSC_PLATFORM_TARGET == 'ios'
@@ -89,12 +104,12 @@ if SSC_PLATFORM_TARGET == 'ios'
     ldflags << '-arch arm64'
     ldflags << "-miphoneos-version-min=#{ENV.fetch('IPHONEOS_VERSION_MIN', '14.0')}"
 
-    ## commands
+    # commands
     conf.cc.command = 'xcrun -sdk iphoneos clang'
     conf.cxx.command = 'xcrun -sdk iphoneos clang++'
     conf.linker.command = 'xcrun -sdk iphoneos clang'
 
-    ## flags
+    # flags
     conf.cc.flags << cflags
     conf.cxx.flags << cflags
     conf.linker.flags << ldflags
@@ -120,12 +135,12 @@ elsif SSC_PLATFORM_TARGET == 'ios-simulator'
     ldflags << "-arch #{ARCH} -target #{ARCH}-apple-ios-simulator"
     ldflags << "-mios-simulator-version-min=#{ENV.fetch('IPHONEOS_VERSION_MIN', '14.0')}"
 
-    ## commands
+    # commands
     conf.cc.command = 'xcrun -sdk iphonesimulator clang'
     conf.cxx.command = 'xcrun -sdk iphonesimulator clang++'
     conf.linker.command = 'xcrun -sdk iphonesimulator clang'
 
-    ## flags
+    # flags
     conf.cc.flags << cflags
     conf.cxx.flags << cflags
     conf.linker.flags << ldflags
@@ -151,12 +166,12 @@ elsif SSC_PLATFORM_TARGET == 'android' or SSC_PLATFORM_TARGET == 'android-emulat
     cflags << "--sysroot=#{sdk}/sysroot"
     ldflags << "--sysroot=#{sdk}/sysroot"
 
-    ## commands
+    # commands
     conf.cc.command = "#{sdk}/bin/clang"
     conf.cxx.command = "#{sdk}/bin/clang++"
     conf.linker.command = "#{sdk}/bin/clang"
 
-    ## flags
+    # flags
     conf.cc.flags << cflags
     conf.cxx.flags << cflags
     conf.linker.flags << ldflags

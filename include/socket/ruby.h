@@ -1,5 +1,5 @@
-#ifndef SOCKET_EXTENSION_RUBY
-#define SOCKET_EXTENSION_RUBY
+#ifndef SOCKET_RUNTIME_RUBY
+#define SOCKET_RUNTIME_RUBY
 
 #include <ctype.h>
 #include <stdio.h>
@@ -19,7 +19,10 @@
 
 #include <socket/extension.h>
 
+#ifdef __cplusplus
 extern "C" {
+#endif
+
   #include <mruby.h>
   #include <mruby/array.h>
   #include <mruby/class.h>
@@ -33,9 +36,12 @@ extern "C" {
   #include <mruby/proc.h>
   #include <mruby/range.h>
   #include <mruby/string.h>
-  #include <mruby/throw.h>
   #include <mruby/value.h>
   #include <mruby/variable.h>
+
+  #ifdef __cplusplus
+  #include <mruby/throw.h>
+  #endif
 
   // included last
   #if MRUBY_RELEASE_NO > 30100
@@ -53,10 +59,17 @@ extern "C" {
     enum mrb_timezone timezone;
     struct tm datetime;
   };
-};
 
+#ifdef __cplusplus
+};
+#endif
+
+#include "ruby/kernel.h"
+
+#ifdef __cplusplus
 #include <mutex>
 #include <vector>
+#endif
 
 #ifdef mrb_range_ptr
 #define MRB_RANGE_PTR(state, value) mrb_range_ptr(value)
@@ -90,6 +103,8 @@ extern "C" {
   } MRB_END_EXC(&c_jmp);                                                       \
   mrb_gc_protect(_state, result);                                              \
 
+
+#ifdef __cplusplus
 namespace Socket::Ruby {
   using Mutex = std::recursive_mutex;
   using Lock = std::lock_guard<Mutex>;
@@ -104,7 +119,7 @@ namespace Socket::Ruby {
       extern struct mrb_data_type Message;
     }
 
-    const char** GetNames ();
+    const std::vector<std::string> GetNames ();
     struct RClass* GetClass (mrb_state *state, struct mrb_data_type &type);
     mrb_value GetClassInstance (
       mrb_state *state,
@@ -206,5 +221,6 @@ namespace Socket::Ruby {
     );
   }
 }
+#endif
 
 #endif

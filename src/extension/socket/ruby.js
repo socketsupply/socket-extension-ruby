@@ -39,9 +39,9 @@ export async function open (filename, options) {
   return ruby.binding
 }
 
-export async function evaluate (source) {
+export async function evaluate (source, options) {
   await load()
-  const result = await ruby.binding.evaluate({ source })
+  const result = await ruby.binding.evaluate({ source, ...options })
 
   if (result.err) {
     throw new Error('Failed to evaluate ruby source', {

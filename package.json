@@ -6,7 +6,7 @@
   "scripts": {
     "test": "ssc build -r -o test",
     "clean": "cd mruby && rake clean",
-    "deep-clean": "rm -f build_config.rb.lock && cd mruby && rake deep_clean"
+    "deep-clean": "rm -f build_config.rb.lock && rm -rf test/build && cd mruby && rake deep_clean"
   },
   "author": "",
   "license": "ISC"

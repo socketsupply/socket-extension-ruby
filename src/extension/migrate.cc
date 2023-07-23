@@ -22,11 +22,13 @@ namespace Socket::Ruby::Migrate {
   }
 
   void MigrateSymbols (
-    mrb_state *mrb,
+    mrb_state *source_state,
     mrb_state *destination_state
   ) {
-    for (mrb_sym i = 1; i < mrb->symidx + 1; i++) {
-      MigrateSymbol(mrb, i, destination_state);
+    if (source_state && destination_state) {
+      for (mrb_sym symbol = 1; symbol < source_state->symidx + 1; ++symbol) {
+        MigrateSymbol(source_state, symbol, destination_state);
+      }
     }
   }
 
@@ -62,22 +64,26 @@ namespace Socket::Ruby::Migrate {
   }
 
   mrb_bool IsSafeMigratableDataType (const mrb_data_type *type) {
-    static const char **types = Socket::Ruby::Types::GetNames();
-    static const char *internals[] = {
+    static const std::vector<std::string> names = Socket::Ruby::Types::GetNames();
+    static const std::vector<std::string> internals = {
       "IO",
       "Time",
       "JSON",
-      nullptr
+      "Thread"
     };
 
-    for (int i = 0; internals[i]; ++i) {
-      if (strcmp(type->struct_name, internals[i]) == 0) {
+    if (type == nullptr) {
+      return false;
+    }
+
+    for (const auto& internal : internals) {
+      if (internal == type->struct_name) {
         return true;
       }
     }
 
-    for (int i = 0; types[i]; i++) {
-      if (strcmp(type->struct_name, types[i]) == 0) {
+    for (const auto& name : names) {
+      if (name == type->struct_name) {
         return true;
       }
     }
@@ -177,22 +183,6 @@ namespace Socket::Ruby::Migrate {
     mrb_irep *representation,
     mrb_state *destination_state
   ) {
-    // migrate pool
-    // FIXME: broken with mruby3
-    #ifndef IREP_TT_SFLAG
-    for (int i = 0; i < representation->plen; ++i) {
-      mrb_value v = ret->pool[i];
-      if (mrb_type(v) == MRB_TT_STRING) {
-        struct RString *s = mrb_str_ptr(v);
-        if (RSTR_NOFREE_P(s) && RSTRING_LEN(v) > 0) {
-          char *old = RSTRING_PTR(v);
-          s->as.heap.ptr = (char*)mrb_malloc(destination_state, RSTRING_LEN(v));
-          memcpy(s->as.heap.ptr, old, RSTRING_LEN(v));
-          RSTR_UNSET_NOFREE_FLAG(s);
-        }
-      }
-    }
-    #endif
 
     // migrate iseq
     if (representation->flags & MRB_ISEQ_NO_FREE) {
@@ -229,15 +219,6 @@ namespace Socket::Ruby::Migrate {
     uint8_t *bin = nullptr;
     size_t bin_size = 0;
 
-    #ifdef DUMP_ENDIAN_NAT
-    mrb_dump_irep(
-      source_state,
-      source_representation,
-      DUMP_ENDIAN_NAT,
-      &bin,
-      &bin_size
-    );
-    #else
     mrb_dump_irep(
       source_state,
       source_representation,
@@ -245,7 +226,6 @@ namespace Socket::Ruby::Migrate {
       &bin,
       &bin_size
     );
-    #endif
 
     mrb_irep* destination_representation = mrb_read_irep(
       destination_state,
@@ -346,16 +326,6 @@ namespace Socket::Ruby::Migrate {
       mrb_sym class_symbol = mrb_intern(source_state, begin, pointer - begin);
 
       if (!mrb_mod_cv_defined(source_state, class_type, class_symbol)) {
-        if (
-          strncmp(
-            "Socket::Context",
-            path_begin,
-            pointer - path_begin
-          ) == 0
-        ) {
-          break;
-        }
-
         mrb_raisef(
           source_state,
           mrb_class_get(source_state, "ArgumentError"),
@@ -506,7 +476,7 @@ namespace Socket::Ruby::Migrate {
             source_state,
             mrb_symbol(source_value),
             destination_state
-            )
+          )
         );
       }
 
